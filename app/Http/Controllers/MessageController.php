@@ -37,7 +37,7 @@ class MessageController extends Controller
     {
         $user = $request->user(); // Usuario autenticado
 
-        // Solo recuperar mensajes entre el usuario autenticado y el usuario especificado
+        // Recupera mensajes específicamente entre el usuario autenticado y el otro usuario especificado
         $messages = Message::where(function ($query) use ($user, $userId) {
             $query->where(function ($q) use ($user, $userId) {
                 $q->where('sender_id', $user->id)->where('receiver_id', $userId);
@@ -46,11 +46,10 @@ class MessageController extends Controller
             });
         })->get();
 
-        // Descifrar cada mensaje para que el usuario autenticado pueda leerlo si es el receptor
-        $decryptedMessages = $messages->map(function ($message) use ($user) {
-            if ($message->receiver_id === $user->id) {
-                $message->message = Crypt::decryptString($message->message);
-            }
+        // Descifra cada mensaje para que ambos usuarios puedan leerlos
+        $decryptedMessages = $messages->map(function ($message) {
+            // Descifra el mensaje, no importa si eres el emisor o el receptor
+            $message->message = Crypt::decryptString($message->message);
             return $message;
         });
 
